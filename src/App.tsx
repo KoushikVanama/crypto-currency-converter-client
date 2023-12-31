@@ -3,16 +3,28 @@ import Select from 'react-select';
 import { FieldInputProps, FormikProps } from 'formik';
 import { Formik, Field, Form, ErrorMessage } from 'formik';
 import "./index.css";
+import { useEffect, useState } from 'react';
+import axios from 'axios';
 
-const cryptoOptions = [
-  { value: 'BTC', label: 'Bitcoin' },
-  { value: 'ETH', label: 'Ethereum' },
-];
+interface CryptoOption {
+  value: string;
+  label: string;
+}
 
-const currencyOptions = [
-  { value: 'USD', label: 'US Dollar' },
-  { value: 'EUR', label: 'Euro' },
-];
+interface CurrencyOption {
+  value: string;
+  label: string;
+}
+
+// const cryptoOptions = [
+//   { value: 'BTC', label: 'Bitcoin' },
+//   { value: 'ETH', label: 'Ethereum' },
+// ];
+
+// const currencyOptions = [
+//   { value: 'USD', label: 'US Dollar' },
+//   { value: 'EUR', label: 'Euro' },
+// ];
 
 const validationSchema = Yup.object().shape({
   crypto: Yup.string().required('Crypto is required'),
@@ -27,10 +39,36 @@ const initialValues = {
 };
 
 const App = () => {
+  const [cryptoOptions, setCryptoOptions] = useState<CryptoOption[] | null>(null);
+  const [currencyOptions, setCurrencyOptions] = useState<CurrencyOption[] | null>(null);
+
   const handleSubmit = (values: any) => {
     console.log("inside submit")
     console.log(values)
   }
+
+  useEffect(() => {
+    const url1 = `http://localhost:4000/api/top-cryptos`;
+    const url2 = `http://localhost:4000/api/accepted-currencies`;
+    const getCurrenicesAndCryptos = async () => {
+      try {
+        const [cryptos, currencies] = await Promise.all([axios.get(url1), axios.get(url2)]);
+        const transformCryptos = cryptos?.data?.map((item: any) => ({
+          value: item.id,
+          label: item.id,
+        }));
+        const transformCurrencies = currencies?.data?.map((item: any) => ({
+          value: item,
+          label: item,
+        }));
+        setCryptoOptions(transformCryptos);
+        setCurrencyOptions(transformCurrencies);
+      } catch (error) {
+        console.log(`Error fetching data: ${error}`);
+      }
+    }
+    getCurrenicesAndCryptos();
+  }, []);
 
   return (
     <div className='max-w-md mx-auto mt-8 p-6 bg-white rounded-md shadow-md'>
@@ -50,13 +88,15 @@ const App = () => {
             </label>
             <Field name="crypto">
               {({ field, form }: { field: FieldInputProps<any>; form: FormikProps<any> }) => (
-                <Select
-                  id="crypto"
-                  name="crypto"
-                  options={cryptoOptions}
-                  onChange={(selectedOption) => form.setFieldValue('crypto', selectedOption?.value || '')}
-                  value={cryptoOptions.find(option => option.value === field.value)}
-                />
+                cryptoOptions && (
+                  <Select
+                    id="crypto"
+                    name="crypto"
+                    options={cryptoOptions || []}
+                    onChange={(selectedOption) => form.setFieldValue('crypto', selectedOption?.value || '')}
+                    value={cryptoOptions.find(option => option.value === field.value)}
+                  />
+                )
               )}
             </Field>
           </div>
@@ -67,14 +107,15 @@ const App = () => {
             </label>
             <Field name="currency">
               {({ field, form }: { field: FieldInputProps<any>; form: FormikProps<any> }) => (
-                <Select
-                  id="currency"
-                  name="currency"
-                  options={currencyOptions}
-                  onChange={(option) => form.setFieldValue("currency", option?.value || '')}
-                  value={currencyOptions.find((option) => option.value === field.value)}
-                />
-              )}
+                currencyOptions && (
+                  <Select
+                    id="currency"
+                    name="currency"
+                    options={currencyOptions || []}
+                    onChange={(option) => form.setFieldValue("currency", option?.value || '')}
+                    value={currencyOptions.find((option) => option.value === field.value)}
+                  />
+                ))}
             </Field>
             <ErrorMessage name="currency" component="div" className="text-red-500 text-sm" />
           </div>
@@ -90,7 +131,7 @@ const App = () => {
         </Form>
       </Formik>
       <div className='mt-2'>
-        <h5>Converted Amount: {}</h5>
+        <h5>Converted Amount: { }</h5>
       </div>
     </div>
   );
