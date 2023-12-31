@@ -6,6 +6,8 @@ import "./index.css";
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 
+const apiUrl = process.env.REACT_APP_API_URL;
+
 interface CryptoOption {
   value: string;
   label: string;
@@ -33,13 +35,9 @@ const App = () => {
   const [currencyOptions, setCurrencyOptions] = useState<CurrencyOption[] | null>(null);
   const [convertedAmount, setConvertedAmount] = useState(null);
 
-  const url3 = `http://localhost:4000/api/convert-currency`;
-
   const handleSubmit = async (values: any) => {
     const { crypto, currency, amount } = values;
-    console.log("inside submit")
-    console.log(values)
-    const response = await axios.get(url3, {
+    const response = await axios.get(`${apiUrl}/api/convert-currency`, {
       params: {
         sourceCrypto: crypto,
         amount: amount,
@@ -50,11 +48,14 @@ const App = () => {
   }
 
   useEffect(() => {
-    const url1 = `http://localhost:4000/api/top-cryptos`;
-    const url2 = `http://localhost:4000/api/accepted-currencies`;
     const getCurrenicesAndCryptos = async () => {
       try {
-        const [cryptos, currencies] = await Promise.all([axios.get(url1), axios.get(url2)]);
+        const [cryptos, currencies] = await Promise.all(
+          [
+            axios.get(`${apiUrl}/api/top-cryptos`),
+            axios.get(`${apiUrl}/api/accepted-currencies`)
+          ]
+        );
         const transformCryptos = cryptos?.data?.map((item: any) => ({
           value: item.id,
           label: item.id,
@@ -101,8 +102,8 @@ const App = () => {
                   )
                 )}
               </Field>
+              <ErrorMessage name="crypto" component="div" className="text-red-500 text-sm" />
             </div>
-            <ErrorMessage name="crypto" component="div" className="text-red-500 text-sm" />
             <div>
               <label htmlFor="currency" className='block text-sm font-medium text-gray-600'>
                 Currency:
