@@ -41,10 +41,22 @@ const initialValues = {
 const App = () => {
   const [cryptoOptions, setCryptoOptions] = useState<CryptoOption[] | null>(null);
   const [currencyOptions, setCurrencyOptions] = useState<CurrencyOption[] | null>(null);
+  const [convertedAmount, setConvertedAmount] = useState(null);
 
-  const handleSubmit = (values: any) => {
+  const url3 = `http://localhost:4000/api/convert-currency`;
+
+  const handleSubmit = async (values: any) => {
+    const { crypto, currency, amount } = values;
     console.log("inside submit")
     console.log(values)
+    const response = await axios.get(url3, {
+      params: {
+        sourceCrypto: crypto,
+        amount: amount,
+        targetCurrency: currency,
+      }
+    });
+    setConvertedAmount(response?.data?.convertedAmount);
   }
 
   useEffect(() => {
@@ -79,59 +91,72 @@ const App = () => {
         validationSchema={validationSchema}
         onSubmit={handleSubmit}
         enableReinitialize
-        debug
       >
-        <Form className="space-y-4">
-          <div>
-            <label htmlFor="crypto" className="block text-sm font-medium text-gray-600">
-              Crypto:
-            </label>
-            <Field name="crypto">
-              {({ field, form }: { field: FieldInputProps<any>; form: FormikProps<any> }) => (
-                cryptoOptions && (
-                  <Select
-                    id="crypto"
-                    name="crypto"
-                    options={cryptoOptions || []}
-                    onChange={(selectedOption) => form.setFieldValue('crypto', selectedOption?.value || '')}
-                    value={cryptoOptions.find(option => option.value === field.value)}
-                  />
-                )
-              )}
-            </Field>
-          </div>
-          <ErrorMessage name="crypto" component="div" className="text-red-500 text-sm" />
-          <div>
-            <label htmlFor="currency" className='block text-sm font-medium text-gray-600'>
-              Currency:
-            </label>
-            <Field name="currency">
-              {({ field, form }: { field: FieldInputProps<any>; form: FormikProps<any> }) => (
-                currencyOptions && (
-                  <Select
-                    id="currency"
-                    name="currency"
-                    options={currencyOptions || []}
-                    onChange={(option) => form.setFieldValue("currency", option?.value || '')}
-                    value={currencyOptions.find((option) => option.value === field.value)}
-                  />
-                ))}
-            </Field>
-            <ErrorMessage name="currency" component="div" className="text-red-500 text-sm" />
-          </div>
-          <div>
-            <label htmlFor='amount' className="block text-sm font-medium text-gray-600">
-              Amount:
-            </label>
-            <Field type="number" id="amount" name="amount" className="border px-4 py-2 w-full rounded-md focus:outline-none focus:ring focus:border-blue-300"
-            />
-            <ErrorMessage name="amount" component="div" className="text-red-500 text-sm" />
-          </div>
-          <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring focus:border-blue-300">Submit</button>
-        </Form>
+        {({ resetForm, setFieldValue }) => (
+          <Form className="space-y-4">
+            <div>
+              <label htmlFor="crypto" className="block text-sm font-medium text-gray-600">
+                Crypto:
+              </label>
+              <Field name="crypto">
+                {({ field, form }: { field: FieldInputProps<any>; form: FormikProps<any> }) => (
+                  cryptoOptions && (
+                    <Select
+                      id="crypto"
+                      name="crypto"
+                      options={cryptoOptions || []}
+                      onChange={(selectedOption) => form.setFieldValue('crypto', selectedOption?.value || '')}
+                      value={cryptoOptions.find(option => option.value === field.value) || null}
+                    />
+                  )
+                )}
+              </Field>
+            </div>
+            <ErrorMessage name="crypto" component="div" className="text-red-500 text-sm" />
+            <div>
+              <label htmlFor="currency" className='block text-sm font-medium text-gray-600'>
+                Currency:
+              </label>
+              <Field name="currency">
+                {({ field, form }: { field: FieldInputProps<any>; form: FormikProps<any> }) => (
+                  currencyOptions && (
+                    <Select
+                      id="currency"
+                      name="currency"
+                      options={currencyOptions || []}
+                      onChange={(option) => form.setFieldValue("currency", option?.value || '')}
+                      value={currencyOptions.find((option) => option.value === field.value) || null}
+                    />
+                  ))}
+              </Field>
+              <ErrorMessage name="currency" component="div" className="text-red-500 text-sm" />
+            </div>
+            <div>
+              <label htmlFor='amount' className="block text-sm font-medium text-gray-600">
+                Amount:
+              </label>
+              <Field type="number" id="amount" name="amount" className="border px-4 py-2 w-full rounded-md focus:outline-none focus:ring focus:border-blue-300"
+              />
+              <ErrorMessage name="amount" component="div" className="text-red-500 text-sm" />
+            </div>
+            <div className='flex justify-around'>
+              <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:border-blue-300">Submit</button>
+              <button
+                type="button"
+                className="bg-zinc-500 text-white px-4 py-2 rounded-md hover:bg-zinc-600 focus:outline-none focus:border-zinc-300"
+                onClick={() => {
+                  resetForm();
+                  setFieldValue('crypto', '');
+                  setFieldValue('currency', '');
+                  setConvertedAmount(null);
+                }}
+              >Reset</button>
+            </div>
+          </Form>
+        )}
       </Formik>
       <div className='mt-2'>
-        <h5>Converted Amount: { }</h5>
+        <h5>Converted Amount: {convertedAmount} </h5>
       </div>
     </div>
   );
