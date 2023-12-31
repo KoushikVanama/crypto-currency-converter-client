@@ -16,16 +16,6 @@ interface CurrencyOption {
   label: string;
 }
 
-// const cryptoOptions = [
-//   { value: 'BTC', label: 'Bitcoin' },
-//   { value: 'ETH', label: 'Ethereum' },
-// ];
-
-// const currencyOptions = [
-//   { value: 'USD', label: 'US Dollar' },
-//   { value: 'EUR', label: 'Euro' },
-// ];
-
 const validationSchema = Yup.object().shape({
   crypto: Yup.string().required('Crypto is required'),
   currency: Yup.string().required('Currency is required'),
